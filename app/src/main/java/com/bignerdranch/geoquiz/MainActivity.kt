@@ -4,30 +4,28 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import com.bignerdranch.geoquiz.databinding.ActivityMainBinding
+
+private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-        private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans, true),
-        Question(R.string.question_mideast, false),
-        Question(R.string.question_africa, false),
-        Question(R.string.question_americas, true),
-        Question(R.string.question_asia, true)
-    )
-     private var currentIndex = 0
+    private val quizViewModel : QuizViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate(Bundle?) called")
         binding =  ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        Log.d(TAG, "Got a QuizViewModel: $quizViewModel")
 
+//      listener for when text view is tapped
         binding.questionTextView.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            quizViewModel.moveToNext()
             updateQuestion()
         }
 
@@ -40,28 +38,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.prevButton.setOnClickListener {
-            if (currentIndex == 0) {
-                currentIndex = questionBank.size - 1
-            } else {
-                currentIndex -= 1
-            }
+            quizViewModel.moveToPrev()
             updateQuestion()
         }
 
         binding.nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            quizViewModel.moveToNext()
             updateQuestion()
         }
         updateQuestion()
     }
-    private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
-        binding.questionTextView.setText(questionTextResId)
-        //Log.e("Index", "The current index is $currentIndex")
-    }
-    private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
 
+    private fun updateQuestion() {
+        val questionTextResId = quizViewModel.currentQuestionText
+        binding.questionTextView.setText(questionTextResId)
+    }
+
+    private fun checkAnswer(userAnswer: Boolean) {
+        val correctAnswer = quizViewModel.currentQuestionAnswer
         val messageResId = if (userAnswer == correctAnswer) {
             R.string.correct_toast
         } else {
